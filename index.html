@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#d4eff0" />
+  <meta name="description" content="Chơi bò trên hành tinh cỏ cùng team: ăn cỏ, nâng kỹ năng, nhảy né và húc đối thủ." />
+  <title>Hành tinh cỏ — Cùng team đi chơi</title>
+</head>
+<body>
+  <canvas id="world" aria-label="Thế giới 3D: bò đi trên hành tinh phủ cỏ"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div id="low-health-vignette" class="low-health-vignette" aria-hidden="true" hidden></div>
+  <header class="game-header">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">✳</span> HÀNH TINH CỎ</div>
+    <div class="header-actions">
+      <button type="button" class="upgrade-shortcut" data-toggle-upgrades aria-expanded="true" aria-controls="quick-upgrade-body">✦ Nâng cấp <b id="hud-skill-points">0</b></button>
+      <button type="button" class="top-shortcut" data-open-menu="room" aria-haspopup="dialog" aria-controls="game-menu">🏆 Top</button>
+      <button type="button" class="menu-button" data-open-menu="settings" aria-haspopup="dialog" aria-controls="game-menu">☰ Menu <kbd>Esc</kbd></button>
+    </div>
+  </header>
+  <div class="round-hud"><span id="round-name">VÒNG 1 · ĂN CỎ</span><b id="phase-clock">00:30</b><span id="phase-hint">Chuẩn bị 30 giây trước combat</span></div>
+  <div id="team-score" class="team-score" aria-label="Điểm hai đội"><span id="blue-score">Xanh · 0</span><span id="red-score">Đỏ · 0</span></div>
+  <aside class="grazing-card" aria-label="Máu, stamina và cấp của bạn">
+    <div id="my-team" class="my-team">Đang chia đội…</div>
+    <div class="cow-status"><span class="status-dot"></span><span id="cow-state" role="status">Đang ngắm đồng cỏ</span></div>
+    <div class="health-heading"><span>MÁU</span><span id="health-text">100 / 100</span></div>
+    <div id="health-bar" class="health-bar" role="progressbar" aria-label="Máu của bò" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span id="health-fill"></span></div>
+    <div class="stamina-heading"><span>STAMINA</span><span id="stamina-text">100 / 100</span></div>
+    <div id="stamina-bar" class="stamina-bar" role="progressbar" aria-label="Stamina của bò" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span id="stamina-fill"></span></div>
+    <div class="level-heading"><span>LEVEL <b id="level-number">1</b><small id="level-cap"> / 21</small></span><span id="xp-text">0 / 180 XP</span></div>
+    <div id="xp-bar" class="xp-bar" role="progressbar" aria-label="Kinh nghiệm lên cấp" aria-valuemin="0" aria-valuemax="180" aria-valuenow="0"><span id="xp-fill"></span></div>
+    <p id="bite-reward" class="bite-reward" role="status">1 cụm cỏ = 1 XP · Ăn rộng thu được nhiều cỏ hơn</p>
+    <div class="meal-count"><strong id="meal-count">0</strong><span>lượt ăn cỏ</span></div>
+
+    <span id="stun-status" class="stun-status" role="status" hidden>Đang choáng</span>
+  </aside>
+  <aside id="quick-upgrades" class="quick-upgrades" aria-label="Nâng kỹ năng nhanh">
+    <button id="quick-upgrade-toggle" class="quick-upgrade-toggle" type="button" data-toggle-upgrades aria-expanded="true" aria-controls="quick-upgrade-body">
+      <span>✦ Kỹ năng <b id="quick-skill-points">0</b></span><span class="quick-upgrade-chevron" aria-hidden="true">⌄</span>
+    </button>
+    <div id="quick-upgrade-body">
+      <div id="quick-skill-list" class="quick-skill-list"></div>
+      <p id="quick-upgrade-hint" class="quick-upgrade-hint">Ăn cỏ lên cấp để nhận điểm.</p>
+    </div>
+  </aside>
+  <div class="quick-actions">
+    <button id="eat-button" type="button">♧ Ăn cỏ <kbd>E</kbd></button>
+    <div id="emote-buttons" class="emote-buttons" aria-label="Biểu cảm của bò"></div>
+    <p id="emote-hint" class="emote-hint" role="status">1 thả tim · 2 vui vẻ · 3 Moo!</p>
+  </div>
+  <aside id="knockout-notice" class="watch-notice" aria-label="Điều khiển xem trận" hidden>
+    <div class="watch-controls">
+      <label for="watch-player">Xem</label>
+      <button type="button" data-watch-step="-1" aria-label="Xem người trước" title="Xem người trước" disabled>‹</button>
+      <select id="watch-player" aria-label="Người đang xem" disabled></select>
+      <button type="button" data-watch-step="1" aria-label="Xem người tiếp theo" title="Xem người tiếp theo" disabled>›</button>
+    </div>
+    <div class="watch-footer"><span id="wait-message" role="status">Chờ vòng mới</span><span>Vào sau <b id="return-seconds">0</b>s</span></div>
+  </aside>
+  <p id="combat-notice" class="combat-notice" role="status" hidden></p>
+  <div id="level-toast" class="level-toast" role="status" hidden></div>
+  <section id="level-reward" class="reward-notice" aria-labelledby="reward-title" hidden>
+    <h2 id="reward-title">Chúc mừng lên level!</h2>
+    <div role="status" aria-live="polite"><p id="reward-wish"></p><p id="reward-bonus"></p><p id="reward-skin" hidden></p></div>
+    <div class="notice-actions"><button id="reward-equip" type="button" hidden>Mặc skin mới ♡</button><button id="reward-continue" type="button" aria-label="Đóng thông báo lên cấp">Đóng</button></div>
+  </section>
+  <dialog id="game-menu" class="game-menu" aria-labelledby="menu-title">
+    <div class="menu-heading"><div><p class="menu-eyebrow">HÀNH TINH CỎ</p><h1 id="menu-title">Menu trò chơi</h1></div><button id="close-menu" type="button" aria-label="Đóng menu">×</button></div>
+    <nav class="menu-tabs" role="tablist" aria-label="Các mục trong menu">
+      <button type="button" id="tab-settings" role="tab" data-menu-tab="settings" aria-controls="panel-settings" aria-selected="true">Cài đặt</button>
+      <button type="button" id="tab-help" role="tab" data-menu-tab="help" aria-controls="panel-help" aria-selected="false">Hướng dẫn</button>
+      <button type="button" id="tab-upgrades" role="tab" data-menu-tab="upgrades" aria-controls="panel-upgrades" aria-selected="false">Nâng cấp</button>
+      <button type="button" id="tab-room" role="tab" data-menu-tab="room" aria-controls="panel-room" aria-selected="false">Phòng chơi</button>
+    </nav>
+    <div class="menu-content">
+      <section id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" data-menu-panel="settings">
+        <section class="account-panel" aria-labelledby="account-title">
+          <h2 id="account-title">Tài khoản</h2>
+          <p id="account-status" role="status">Đang chơi khách</p>
+          <p id="account-note" class="upgrade-note">Đăng nhập để giữ dữ liệu khi đổi máy.</p>
+          <div class="account-actions"><button id="account-sign-in" type="button">Đăng nhập Google</button><button id="account-sign-out" type="button" hidden>Đăng xuất</button><button id="account-guest" type="button">Tiếp tục chơi khách</button></div>
+          <p id="account-save-status" role="status">Chơi khách · lưu trên máy này</p>
+        </section>
+        <div class="settings-grid">
+          <section class="menu-card"><h2>Tên của bạn</h2><label for="player-name">Tên hiển thị</label><div class="name-editor"><input id="player-name" type="text" maxlength="24" placeholder="Tên chú bò" autocomplete="nickname" /><button id="save-name" type="button">Lưu tên</button></div></section>
+          <section class="menu-card"><h2>Âm thanh</h2><button id="sound-toggle" type="button" aria-pressed="true">Âm thanh bật</button><label class="volume-label" for="sound-volume">Âm lượng <input id="sound-volume" type="range" min="0" max="100" value="35" /></label></section>
+        </div>
+        <section id="mode-panel" class="play-settings" aria-label="Chế độ chơi và chọn đội">
+      <div class="skills-heading"><span>CHẾ ĐỘ CHƠI</span><span id="mode-label">2 đội</span></div>
+      <label class="mode-choice" for="game-mode">Kiểu chơi <select id="game-mode" disabled><option value="teams">2 đội</option><option value="free">Tự do</option></select></label>
+      <p id="mode-note" class="upgrade-note">Chủ phòng chọn chế độ trong 30 giây ăn cỏ.</p>
+      <div id="team-choice">
+        <div class="team-choice-buttons" role="group" aria-label="Chọn đội của bạn">
+          <button type="button" data-team="blue" aria-pressed="false" disabled>Đội Xanh <small id="blue-count">0 người</small></button>
+          <button type="button" data-team="red" aria-pressed="false" disabled>Đội Đỏ <small id="red-count">0 người</small></button>
+        </div>
+        <p id="team-choice-note" class="upgrade-note">Chọn đội bạn muốn. Skin chỉ thay đổi ngoại hình.</p>
+      </div>
+    </section>
+      </section>
+      <section id="panel-help" role="tabpanel" aria-labelledby="tab-help" data-menu-panel="help" hidden>
+        <h2>Điều khiển bằng bàn phím</h2>
+        <dl class="help-keys"><div><dt><kbd>W A S D</kbd> / <kbd>↑ ↓ ← →</kbd></dt><dd>Di chuyển quanh hành tinh.</dd></div><div><dt><kbd>E</kbd></dt><dd>Giữ để ăn cỏ. Phải đứng yên trên mặt đất.</dd></div><div><dt><kbd>Space</kbd></dt><dd>Nhảy né húc, tốn 10 stamina. Khi đang nhảy không bị húc trúng.</dd></div><div><dt><kbd>F</kbd></dt><dd>Húc đối thủ trước mặt, tốn 25 stamina. Chỉ dùng trong combat.</dd></div><div><dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></dt><dd>Thả tim, vui vẻ, kêu Moo.</dd></div><div><dt>Cuộn chuột / <kbd>Esc</kbd></dt><dd>Đổi khoảng cách camera / mở hoặc đóng menu.</dd></div></dl>
+        <h2>Mỗi vòng chơi</h2><ol class="help-rules"><li><b>30 giây chuẩn bị:</b> ăn cỏ lấy XP, nâng kỹ năng và chọn đội.</li><li><b>60 giây combat:</b> húc gây mất máu và đẩy bay. Ăn cỏ chỉ hồi máu, không cho XP.</li><li><b>Choáng 0,5 giây khi trúng húc:</b> không di chuyển, nhảy, húc hoặc ăn cỏ hồi máu. Hết choáng là điều khiển lại được.</li><li><b>Nhảy để né:</b> đối thủ không húc trúng bạn trong thời gian nhảy. Tiếp đất thì có thể bị húc lại.</li><li><b>Vòng mới:</b> hồi đầy máu và stamina. Giữ cấp, XP và kỹ năng nếu sống sót. Bị húc chết mới về cấp 1; skin vẫn giữ.</li></ol>
+        <p class="upgrade-note">Đội Xanh và Đỏ độc lập với skin. Không húc đồng đội. Đội hạ nhiều bò hơn thắng; bằng điểm thì xét sát thương.</p>
+      </section>
+      <section id="panel-upgrades" role="tabpanel" aria-labelledby="tab-upgrades" data-menu-panel="upgrades" hidden>
+        <h2>Chọn cách chơi cho chú bò</h2>
+        <details id="skill-panel">
+    <summary class="skills-heading"><span>KỸ NĂNG <i aria-hidden="true">⌄</i></span><span><b id="skill-points">0</b> điểm còn lại</span></summary>
+    <div id="skill-list"></div>
+    <p class="upgrade-note">Nâng trong 30 giây ăn cỏ. Chỉ mất cấp và kỹ năng khi bị húc chết.</p>
+    <p id="level-bonuses" class="level-bonuses"></p>
+    </details>
+        <details id="skin-panel">
+      <summary class="skills-heading"><span>TỦ SKIN <i aria-hidden="true">⌄</i></span><b id="skin-count">1/7</b></summary>
+      <div class="collection-heading"><span>SƯU TẦM · CẤP <b id="collection-level">1</b></span><span id="collection-xp">0 / 180 XP</span></div>
+      <div class="collection-bar"><span id="collection-fill"></span></div>
+      <p class="upgrade-note">XP sưu tầm giữ qua các vòng. Skin không tăng sức mạnh.</p>
+      <div class="skin-preview-card">
+        <strong id="skin-preview-name">Bò sữa</strong>
+        <canvas id="skin-preview" aria-label="Xem trước ngoại hình bò 3D"></canvas>
+        <label class="skin-turn-label" for="skin-turn">Xoay bò <input id="skin-turn" type="range" min="-180" max="180" value="-25" /></label>
+        <p id="skin-preview-note" class="upgrade-note"></p>
+        <button id="skin-preview-equip" type="button" disabled>Đang mặc</button>
+      </div>
+      <div id="skin-list"></div>
+      <p class="upgrade-note">Bấm Xem để ngắm mọi mẫu 3D, kể cả skin chưa mở. Đạt cấp sưu tầm 3, 5, 7, 9, 11, 13 để nhận quà.</p>
+    </details>
+        <p id="save-status" class="save-status">Chỉ mất cấp khi bị húc chết · Skin tự lưu trên máy này.</p>
+        <div class="card-bottom"><span>Cỏ mọc lại</span><span id="regrowth-time">20 GIÂY</span></div>
+      </section>
+      <section id="panel-room" role="tabpanel" aria-labelledby="tab-room" data-menu-panel="room" hidden>
+        <section class="leaderboard-panel" aria-labelledby="leaderboard-title">
+          <div class="leaderboard-heading"><h2 id="leaderboard-title">🏆 Top hạ bò</h2><span>TOP 10</span></div>
+          <p class="upgrade-note">Cộng dồn qua các vòng trong phòng, kể cả khi bị húc chết.</p>
+          <ol id="leaderboard-list" class="leaderboard-list"></ol>
+          <p id="leaderboard-empty" class="upgrade-note">Chưa ai hạ bò. Vào combat để lên Top!</p>
+          <p class="upgrade-note">Xếp theo số hạ. Bằng nhau xét tổng sát thương. Làm mới khi phòng bắt đầu lại hoặc máy chủ khởi động lại.</p>
+        </section>
+        <section class="room-link-panel" aria-label="Tạo hoặc vào phòng">
+          <label for="join-room-code">Mã phòng</label>
+          <div class="room-join"><input id="join-room-code" type="text" maxlength="24" placeholder="TEAM" autocomplete="off" /><button id="join-room" type="button">Vào phòng</button><button id="create-room" type="button">Tạo phòng</button></div>
+          <p class="upgrade-note">Gửi mã hoặc bấm Mời team để mọi người vào cùng phòng.</p>
+        </section>
+        <details id="account-top-panel"><summary class="skills-heading"><span>TOP TÀI KHOẢN <i aria-hidden="true">⌄</i></span><span>Lưu lâu dài</span></summary><ol id="account-top-list" class="leaderboard-list"></ol><p id="account-top-empty" class="upgrade-note">Chưa có điểm tài khoản.</p></details>
+        <div class="room-heading"><h2><span id="team-count">1</span> người trong phòng</h2><button id="copy-room" type="button">Mời team ↗</button></div>
+        <input id="room-link" readonly aria-label="Link mời team" hidden />
+        <ul id="team-list" class="room-roster"></ul>
+        <details id="score-panel">
+      <summary class="skills-heading"><span>ĐIỂM VÒNG <i aria-hidden="true">⌄</i></span><span>Hạ / Sát thương</span></summary>
+      <ol id="score-list" class="score-list"></ol>
+      <p id="score-rule" class="upgrade-note">Cộng điểm cả đội. Nhiều điểm hạ hơn thắng; bằng thì xét sát thương.</p>
+    </details>
+        <div class="room-actions"><button id="show-result" type="button" disabled>Kết quả vòng trước</button><button id="reset-button" type="button">Về chỗ ban đầu ↺</button></div>
+        <section id="round-result" class="round-result" aria-labelledby="result-title" hidden>
+    <div class="result-heading"><h2 id="result-title">Kết quả vòng</h2><button id="close-result" type="button" aria-label="Đóng kết quả vòng">×</button></div>
+    <p id="result-winner" role="status"></p>
+    <div id="result-teams" class="result-teams" hidden></div>
+    <div class="result-columns"><span>NGƯỜI CHƠI</span><span>HẠ / SÁT THƯƠNG</span></div>
+    <ol id="result-list" class="score-list"></ol>
+    <p class="upgrade-note">Vòng mới đang chạy. Bạn vẫn có thể đi và ăn cỏ.</p>
+  </section>
+        <p id="room-status" class="room-status" role="status">Đang kết nối phòng chung…</p>
+      </section>
+    </div>
+    <div class="menu-footer"><p id="menu-feedback" role="status" hidden></p><span>Vòng chơi vẫn tiếp tục khi mở menu. Nhấn Esc để trở lại.</span></div>
+  </dialog>
+  <p id="webgl-error" hidden>Trình duyệt chưa mở được WebGL. Hãy bật tăng tốc phần cứng rồi tải lại trang.</p>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
