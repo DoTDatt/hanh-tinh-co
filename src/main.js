@@ -65,6 +65,12 @@ try { await account.ready } catch (error) {
   throw error
 }
 document.addEventListener('play-guest', () => gameMenu.close())
+if (import.meta.env.PROD && !account.configured) {
+  document.querySelector('.room-link-panel').hidden = true
+  document.querySelector('#copy-room').hidden = true
+  document.querySelector('#account-top-panel').hidden = true
+  document.querySelector('#room-online-note').textContent = 'Chơi một mình. Phòng online sẽ mở khi nối Supabase.'
+}
 const modeSelect = document.querySelector('#game-mode')
 const teamButtons = [...document.querySelectorAll('[data-team]')]
 const emoteHint = document.querySelector('#emote-hint')
@@ -1086,4 +1092,5 @@ nameInput.value = playerName
 }
 
 buildWorld()
+
 
