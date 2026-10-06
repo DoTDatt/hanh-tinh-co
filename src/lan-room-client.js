@@ -18,7 +18,8 @@ export function connectRoom(handlers) {
   const connect = () => {
     if (stopped) return
     handlers.onStatus('Đang kết nối phòng chung…')
-    socket = (handlers.createSocket || (url => new WebSocket(url)))(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/game-room${resumeToken ? `?resume=${encodeURIComponent(resumeToken)}` : ''}`)
+    const endpoint = import.meta.env.VITE_ROOM_URL ? new URL(import.meta.env.VITE_ROOM_URL) : location
+    socket = (handlers.createSocket || (url => new WebSocket(url)))(`${endpoint.protocol === 'https:' ? 'wss:' : 'ws:'}//${endpoint.host}/game-room${resumeToken ? `?resume=${encodeURIComponent(resumeToken)}` : ''}`)
     socket.addEventListener('message', event => {
       let message
       try { message = JSON.parse(event.data) } catch { return }
@@ -35,7 +36,7 @@ export function connectRoom(handlers) {
         handlers.onLeaderboard?.(message.leaderboard || [], selfId)
         if (message.lastResult) handlers.onResult?.(message.lastResult, selfId)
         send({ type: 'name', name })
-        handlers.onStatus(message.resumed ? 'Đã trở lại · Giữ máu và điểm' : 'Đã vào phòng LAN')
+        handlers.onStatus(message.resumed ? 'Đã trở lại · Giữ máu và điểm' : 'Đã vào phòng chung')
       } else if (message.type === 'players') {
         if (message.phase) handlers.onPhase?.(message.phase)
         handlers.onPlayers(message.players, selfId)
@@ -110,3 +111,5 @@ export function connectRoom(handlers) {
     get now() { return Date.now() + timeOffset },
   }
 }
+
+

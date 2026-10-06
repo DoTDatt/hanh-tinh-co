@@ -93,4 +93,12 @@ Game chạy trên GitHub Pages. Supabase cung cấp đăng nhập Google, lưu c
 
 Mỗi phòng Realtime chọn một trình duyệt đang tham gia để điều phối luật chơi. Nếu trình duyệt đó rời phòng, người còn lại tiếp quản và bắt đầu lượt chuẩn bị mới. Phòng đang chạy chỉ giữ trong bộ nhớ của trình duyệt chủ phòng; Supabase không lưu trạng thái trận. Vì thế mô hình này phù hợp phòng bạn bè nhỏ, khoảng 2–4 người. Người chơi có thể sửa mã chạy trên máy mình, nên không dùng Top này cho phần thưởng có giá trị thật.
 
-Nếu chưa có project Supabase hoặc chưa đặt hai GitHub Secrets, trang GitHub Pages vẫn mở và cho chơi một mình. Nút đăng nhập sẽ tắt; không mời team online được. Bản LAN `npm run dev` hoặc `npm run play` vẫn dùng Node/WebSocket riêng. Để thử Supabase tại máy, sao chép `.env.example` thành `.env`, điền URL/key và dùng `npm run dev`; đặt `VITE_ROOM_TRANSPORT=supabase`. `.env` đã được Git bỏ qua.
+Nếu chưa có Supabase và chưa đặt biến phòng chung, GitHub Pages mở chế độ chơi một mình. Nút đăng nhập tắt. Khi đặt `VITE_ROOM_TRANSPORT=lan` và `VITE_ROOM_URL` bằng URL HTTPS của máy chủ WebSocket, trang Pages cho team vào một phòng chung. Bản LAN `npm run dev` hoặc `npm run play` vẫn dùng Node/WebSocket riêng. Để thử Supabase tại máy, sao chép `.env.example` thành `.env`, điền URL/key và dùng `npm run dev`; đặt `VITE_ROOM_TRANSPORT=supabase`. `.env` đã được Git bỏ qua.
+
+## Chơi chung từ Internet qua Cloudflare Quick Tunnel
+
+Khi chưa dùng được Supabase, có thể chạy máy chủ Node của game trên máy cá nhân và mở qua Cloudflare Quick Tunnel. Trang GitHub Pages vẫn là link ổn định cho người chơi; trình duyệt nối WebSocket tới URL tunnel lấy từ biến GitHub Actions `VITE_ROOM_URL`. Đặt `VITE_ROOM_TRANSPORT=lan`. Mọi người cùng vào một phòng; tính năng tạo nhiều mã phòng chưa áp dụng cho máy chủ Node này. Tiến trình tài khoản vẫn chỉ lưu trên trình duyệt.
+
+Bản này cần máy chủ Node và cloudflared còn chạy, đồng thời máy tính còn bật. Quick Tunnel là dịch vụ tạm thời: URL có thể đổi khi khởi động lại và không có bảo đảm luôn hoạt động. Khi URL đổi, cập nhật `VITE_ROOM_URL` trong GitHub repo và chạy lại workflow **Deploy game**. Thư mục `.runtime/` chứa file chạy và log trên máy này, không được đưa vào Git.
+
+Để chạy lại từ PowerShell trong `D:\MyProject`: đặt `$env:VITE_ROOM_TRANSPORT='lan'`, `$env:VITE_BASE_PATH='/'`, chạy `npm run build`, rồi đặt `$env:PORT='4173'`, `$env:HOST='127.0.0.1'` và chạy `node server/start.mjs`. Ở cửa sổ khác, chạy `.\.runtime\cloudflared.exe tunnel --no-autoupdate --url http://127.0.0.1:4173`. Dùng URL `https://...trycloudflare.com` mới in ra trong terminal để cập nhật biến GitHub. Không mở cổng router.

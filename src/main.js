@@ -65,11 +65,15 @@ try { await account.ready } catch (error) {
   throw error
 }
 document.addEventListener('play-guest', () => gameMenu.close())
-if (import.meta.env.PROD && !account.configured) {
+if (import.meta.env.PROD && !account.configured && import.meta.env.VITE_ROOM_TRANSPORT !== 'lan') {
   document.querySelector('.room-link-panel').hidden = true
   document.querySelector('#copy-room').hidden = true
   document.querySelector('#account-top-panel').hidden = true
   document.querySelector('#room-online-note').textContent = 'Chơi một mình. Phòng online sẽ mở khi nối Supabase.'
+} else if (import.meta.env.PROD && import.meta.env.VITE_ROOM_TRANSPORT === 'lan') {
+  document.querySelector('.room-link-panel').hidden = true
+  document.querySelector('#account-top-panel').hidden = true
+  document.querySelector('#room-online-note').textContent = 'Phòng chung Internet · bấm Mời team để gửi link cùng trận.'
 }
 const modeSelect = document.querySelector('#game-mode')
 const teamButtons = [...document.querySelectorAll('[data-team]')]
@@ -81,14 +85,14 @@ try { playerName = localStorage.getItem('hanh-tinh-co:name') || playerName } cat
 if (account.playerName) playerName = account.playerName
 nameInput.value = playerName
 document.querySelector('#copy-room').addEventListener('click', async () => {
-  if (!account.configured && import.meta.env.PROD) { showToast('Trang này đang chơi một mình. Cần nối Supabase để mời team.'); return }
-  let link = account.configured && import.meta.env.VITE_ROOM_TRANSPORT !== 'lan' ? new URL(location.href).href.split('#')[0] : location.origin
+  if (!account.configured && import.meta.env.PROD && import.meta.env.VITE_ROOM_TRANSPORT !== 'lan') { showToast('Trang này đang chơi một mình. Cần nối Supabase để mời team.'); return }
+  let link = account.configured && import.meta.env.VITE_ROOM_TRANSPORT !== 'lan' ? new URL(location.href).href.split('#')[0] : new URL(import.meta.env.BASE_URL, location.origin).href
   if ((!account.configured || import.meta.env.VITE_ROOM_TRANSPORT === 'lan') && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     try { link = (await (await fetch('/room-info')).json()).lanUrl || link } catch {}
   }
   try {
     await navigator.clipboard.writeText(link)
-    showToast(account.configured ? 'Đã sao chép link phòng online. Gửi cho team nhé!' : 'Đã sao chép link. Gửi cho team cùng mạng nhé!')
+    showToast(account.configured ? 'Đã sao chép link phòng online. Gửi cho team nhé!' : 'Đã sao chép link. Gửi cho team nhé!')
   } catch {
     const field = document.querySelector('#room-link')
     field.value = link
@@ -1092,5 +1096,7 @@ nameInput.value = playerName
 }
 
 buildWorld()
+
+
 
 

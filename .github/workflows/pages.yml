@@ -27,6 +27,8 @@ jobs:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_ROOM_TRANSPORT: ${{ vars.VITE_ROOM_TRANSPORT }}
+          VITE_ROOM_URL: ${{ vars.VITE_ROOM_URL }}
       - uses: actions/configure-pages@v5
         with:
           enablement: true
@@ -42,3 +44,4 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
