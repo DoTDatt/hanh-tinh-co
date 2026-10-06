@@ -125,6 +125,7 @@ export function createAccount() {
         if (error) throw new Error('Chưa bật chơi khách online trên Supabase')
         session = data.session
       }
+      await client.realtime.setAuth()
       return client
     },
     async getTop() {
