@@ -624,15 +624,18 @@ function buildWorld() {
     const own = players.find(player => player.id === selfId)
     const preparing = phase.stage === 'grazing', teamMode = phase.mode === 'teams'
     modeSelect.disabled = !own || !room?.connected || !preparing || phase.hostId !== selfId
-    document.querySelector('#mode-note').textContent = !own ? 'Đang kết nối phòng…' : phase.hostId === selfId ? preparing ? 'Bạn là chủ phòng. Chọn chế độ cho cả phòng ở đây.' : 'Đang combat. Chọn chế độ ở vòng ăn cỏ tiếp theo.' : teamMode ? 'Chủ phòng chọn chế độ; mỗi người tự chọn đội bên dưới.' : 'Chủ phòng chọn chế độ cho cả phòng. Tự do: tính điểm từng bò.'
+    document.querySelector('#mode-note').textContent = !own ? 'Đang kết nối phòng…' : phase.hostId === selfId ? preparing ? 'Bạn là chủ phòng. Chọn chế độ cho cả phòng ở đây.' : 'Đang combat. Chọn chế độ ở vòng ăn cỏ tiếp theo.' : teamMode ? 'Chủ phòng chọn chế độ; bạn có thể đổi đội nếu quân số vẫn cân bằng.' : 'Chủ phòng chọn chế độ cho cả phòng. Tự do: tính điểm từng bò.'
     document.querySelector('#team-choice').hidden = !teamMode
-    document.querySelector('#team-choice-note').textContent = !own ? 'Đang kết nối phòng…' : preparing ? 'Tự chọn hoặc chuyển đội. Skin chỉ là ngoại hình. Đội giữ qua các vòng.' : 'Đang combat: khóa chuyển đội đến vòng ăn cỏ tiếp theo.'
+    document.querySelector('#team-choice-note').textContent = !own ? 'Đang kết nối phòng…' : preparing ? 'Lần đầu vào sẽ xếp đội ngẫu nhiên. Chỉ đổi đội nếu hai bên lệch tối đa 1 người. Skin chỉ là ngoại hình.' : 'Đang combat: khóa chuyển đội đến vòng ăn cỏ tiếp theo.'
+    const counts = { blue: 0, red: 0 }
+    for (const player of players) if (player.connected !== false && counts[player.team] !== undefined) counts[player.team]++
     for (const button of teamButtons) {
       const selected = own?.team === button.dataset.team
       button.setAttribute('aria-pressed', String(selected))
-      button.disabled = !own || !room?.connected || !preparing || !teamMode || selected
-      const count = players.filter(player => player.connected !== false && player.team === button.dataset.team).length
-      document.querySelector(`#${button.dataset.team}-count`).textContent = `${count} người`
+      const canSwitch = own && Math.abs(counts[button.dataset.team] + 1 - (counts[own.team] - 1)) <= 1
+      button.disabled = !own || !room?.connected || !preparing || !teamMode || selected || !canSwitch
+      button.title = !selected && !canSwitch ? 'Chuyển đội sẽ làm hai bên lệch quá 1 người' : ''
+      document.querySelector(`#${button.dataset.team}-count`).textContent = `${counts[button.dataset.team]} người`
     }
   }
   modeSelect.addEventListener('change', () => { room?.setMode(modeSelect.value) })

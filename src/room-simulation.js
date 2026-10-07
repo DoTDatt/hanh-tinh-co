@@ -63,6 +63,12 @@ export function createRoomSimulation(wss, { grazingSeconds = GRAZING_SECONDS, co
     for (const socket of players.keys()) if (socket.readyState === WebSocket.OPEN) socket.send(encoded)
   }
   const playerList = () => allPlayers().map(({lastBite,lastAttack,lastJump,lastEmote,lastTeamChange,baseColor,spawnNormal,powerRank,armorRank,enduranceRank,flight,buildLocked,...player})=>player)
+  const activeTeamCounts = (exceptId = null) => {
+    const count = { blue: 0, red: 0 }
+    for (const member of players.values()) if (member.id !== exceptId && getTeam(member.team)) count[member.team]++
+    return count
+  }
+  const balancedTeam = count => count.blue === count.red ? (Math.random() < .5 ? 'blue' : 'red') : count.blue < count.red ? 'blue' : 'red'
   const syncHost = () => {
     const online = [...players.values()]
     if (!online.some(player => player.id === phase.hostId)) phase.hostId = online[0]?.id || null
@@ -77,7 +83,7 @@ export function createRoomSimulation(wss, { grazingSeconds = GRAZING_SECONDS, co
     const count = { blue: 0, red: 0 }
     // Giữ đội người chơi đã chọn qua các vòng, không tự đổi đội.
     for (const player of allPlayers()) {
-      if (!getTeam(player.team)) player.team = count.blue <= count.red ? 'blue' : 'red'
+      if (!getTeam(player.team)) player.team = balancedTeam(count)
       placeTeam(player, count[player.team]++)
     }
   }
@@ -119,11 +125,12 @@ export function createRoomSimulation(wss, { grazingSeconds = GRAZING_SECONDS, co
       jumpHeight:0,jumpUntil:0,attackUntil:0,knockedUntil:0,powerRank:0,armorRank:0,enduranceRank:0,flight:null,
       knockouts:0,damageDealt:0,totalKnockouts:0,totalDamage:0,deaths:0,connected:true,spectating:phase.stage==='combat',baseColor:COLORS[spawnCount%COLORS.length],team:null,lastEmote:0,lastTeamChange:0,emote:null,
     }
-    if (!resumed) {
-      const blueCount=allPlayers().filter(member=>member.team==='blue'&&member.connected).length
-      const redCount=allPlayers().filter(member=>member.team==='red'&&member.connected).length
-      player.team=blueCount<=redCount?'blue':'red'
-      placeTeam(player, allPlayers().filter(member=>member.team===player.team).length)
+    const activeCount = activeTeamCounts(player.id)
+    const joiningTeam = getTeam(player.team) && Math.abs(activeCount.blue + Number(player.team === 'blue') - activeCount.red - Number(player.team === 'red')) <= 1
+      ? player.team : balancedTeam(activeCount)
+    if (!resumed || joiningTeam !== player.team) {
+      player.team = joiningTeam
+      placeTeam(player, allPlayers().filter(member=>member.id!==player.id&&member.team===player.team).length)
       player.normal=[...player.spawnNormal]
     }
     const resumeToken = resumed ? requestedToken : randomUUID()
@@ -167,6 +174,9 @@ export function createRoomSimulation(wss, { grazingSeconds = GRAZING_SECONDS, co
         if(message.team===player.team)return
         const now=Date.now()
         if(now-player.lastTeamChange<1000){send(socket,{type:'action-denied',message:'Chờ 1 giây trước khi chuyển đội tiếp nhé!'});return}
+        const count=activeTeamCounts()
+        count[player.team]--;count[message.team]++
+        if(Math.abs(count.blue-count.red)>1){send(socket,{type:'action-denied',message:'Chuyển đội lúc này sẽ làm hai đội lệch quá 1 người.'});return}
         player.lastTeamChange=now;player.team=message.team
         placeTeam(player,allPlayers().filter(member=>member.id!==player.id&&member.team===player.team).length)
         player.normal=[...player.spawnNormal];player.heading=[0,0,-1];player.eating=false;player.jumpHeight=0;player.jumpUntil=0

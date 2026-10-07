@@ -20,7 +20,7 @@ Người mới vào giữa combat sẽ chờ vòng ăn cỏ tiếp theo, không 
 
 ## Hai đội, biểu cảm và âm thanh
 
-Mặc định phòng chơi chế độ **2 đội**: **Xanh** và **Đỏ**, cho cả team tham gia. Mục **Chế độ chơi** nằm trong **Menu → Cài đặt**; chủ phòng chọn **2 đội / Tự do** khi đang ăn cỏ. Mỗi người có hai nút **Đội Xanh / Đội Đỏ** để tự chọn hoặc chuyển đội trong giai đoạn này. Đang combat khóa chuyển đội để điểm vòng hợp lý. Máy chủ chọn đội ít người hơn khi mới vào; sau đó giữ đội đã chọn qua các vòng, không tự cân lại hoặc giới hạn số người mỗi đội. Chuyển đội đưa bò về vị trí đội mới, giữ XP, kỹ năng, máu, stamina và skin. Mỗi lần chuyển cách nhau ít nhất 1 giây.
+Mặc định phòng chơi chế độ **2 đội**: **Xanh** và **Đỏ**, cho cả team tham gia. Mục **Chế độ chơi** nằm trong **Menu → Cài đặt**; chủ phòng chọn **2 đội / Tự do** khi đang ăn cỏ. Người vào lần đầu được xếp ngẫu nhiên khi hai đội bằng người, hoặc vào đội ít người hơn. Mỗi người có hai nút **Đội Xanh / Đội Đỏ** để chuyển đội trong giai đoạn ăn cỏ. Máy chủ chỉ cho chuyển nếu sau đó số người đang kết nối ở hai đội lệch tối đa 1; nút không hợp lệ sẽ bị khóa. Người kết nối lại được giữ đội cũ nếu vẫn cân bằng, nếu không sẽ vào đội ít người hơn. Đang combat khóa chuyển đội. Chuyển đội đưa bò về vị trí đội mới, giữ XP, kỹ năng, máu, stamina và skin. Mỗi lần chuyển cách nhau ít nhất 1 giây. Người rời phòng giữa trận có thể khiến quân số tạm lệch cho đến khi có người mới vào.
 
 Vòng cổ, viền bảng tên, danh sách phòng và nút chọn đội thể hiện màu Xanh/Đỏ. Đội độc lập với skin: skin Dâu có thể ở đội Xanh và skin Matcha có thể ở đội Đỏ. Hai đội có vị trí bắt đầu riêng. Không gây sát thương hoặc đẩy đồng đội; húc hụt vẫn tốn stamina.
 
