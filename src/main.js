@@ -318,7 +318,7 @@ function updatePlayerTag(cow, player, mode = 'free') {
   context.strokeStyle = team?.color || '#cad9b4'
   context.lineWidth = 3
   context.stroke()
-  context.font = '700 29px Segoe UI, sans-serif'
+  context.font = '800 29px Nunito, Segoe UI, sans-serif'
   context.textAlign = 'center'
   context.fillStyle = '#2b4d39'
   context.fillText(`${player.name}${team ? ` · ${team.name}` : ''} · Lv.${player.level}`, 256, 48, 490)
@@ -345,11 +345,21 @@ function createGroundTexture() {
   textureCanvas.width = 512
   textureCanvas.height = 256
   const context = textureCanvas.getContext('2d')
-  context.fillStyle = '#f2f8e6'
+  let seed = 5173
+  const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296 }
+  context.fillStyle = '#edf8db'
   context.fillRect(0, 0, 512, 256)
-  for (let i = 0; i < 14000; i++) {
-    context.fillStyle = i % 2 ? '#ffffff18' : '#4a782a18'
-    context.fillRect(Math.random() * 512, Math.random() * 256, 2, 2)
+  for (let i = 0; i < 48; i++) {
+    const x = random() * 512, y = random() * 256, size = 9 + random() * 27
+    const patch = context.createRadialGradient(x, y, 0, x, y, size)
+    patch.addColorStop(0, i % 3 ? '#689b4b22' : '#ffffff65')
+    patch.addColorStop(1, '#ffffff00')
+    context.fillStyle = patch
+    context.fillRect(x - size, y - size, size * 2, size * 2)
+  }
+  for (let i = 0; i < 9000; i++) {
+    context.fillStyle = i % 2 ? '#ffffff18' : '#4a782a12'
+    context.fillRect(random() * 512, random() * 256, 2, 2)
   }
   const texture = new THREE.CanvasTexture(textureCanvas)
   texture.colorSpace = THREE.SRGBColorSpace
@@ -360,8 +370,8 @@ function createPlanet(radius) {
   const geometry = new THREE.SphereGeometry(radius, 96, 64)
   const positions = geometry.attributes.position
   const colors = new Float32Array(positions.count * 3)
-  const light = new THREE.Color('#94bd61')
-  const dark = new THREE.Color('#658f43')
+  const light = new THREE.Color('#9bc975')
+  const dark = new THREE.Color('#618f4b')
   const color = new THREE.Color()
   for (let index = 0; index < positions.count; index++) {
     const x = positions.getX(index) / radius, y = positions.getY(index) / radius, z = positions.getZ(index) / radius
@@ -385,7 +395,7 @@ function createContactShadow(scene) {
   gradient.addColorStop(1, '#24451d00')
   context.fillStyle = gradient
   context.fillRect(0, 0, 64, 64)
-  const material = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shadowCanvas), transparent: true, opacity: .28, depthWrite: false })
+  const material = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shadowCanvas), transparent: true, opacity: .42, depthWrite: false })
   const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1.65, 2.2).rotateX(-Math.PI / 2), material)
   shadow.renderOrder = 1
   scene.add(shadow)
@@ -396,7 +406,7 @@ function updateContactShadow(shadow, normal, heading, radius, height) {
   shadow.position.copy(normal).multiplyScalar(radius + .014)
   shadow.quaternion.copy(surfaceQuaternion(normal, heading))
   shadow.scale.setScalar(.75 + height * .12)
-  shadow.material.opacity = .3 / (1 + height * 1.8)
+  shadow.material.opacity = .42 / (1 + height * 1.8)
 }
 
 function updateHitGlow(cow, now) {
@@ -446,10 +456,10 @@ function createGrass(scene, radius) {
         vGrassHeight = position.y;
         float phase = dot(instanceMatrix[3].xyz, vec3(1.7, 2.3, 1.1));
         float bend = position.y * position.y;
-        transformed.x += sin(grassTime * 1.6 + phase) * bend * ${reduceMotion ? '0.0' : '0.48'};
-        transformed.z += cos(grassTime * 1.1 + phase * .7) * bend * ${reduceMotion ? '0.0' : '0.3'};`)
+        transformed.x += sin(grassTime * 1.6 + phase) * bend * ${reduceMotion ? '0.0' : '0.18'};
+        transformed.z += cos(grassTime * 1.1 + phase * .7) * bend * ${reduceMotion ? '0.0' : '0.12'};`)
     shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vGrassHeight;')
-      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= mix(vec3(.72, .84, .65), vec3(1.12, 1.1, .87), vGrassHeight);')
+      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= mix(vec3(.72, .86, .69), vec3(.97, 1.08, .94), vGrassHeight);')
   }
   const mesh = new THREE.InstancedMesh(geometry, grassMaterial, count)
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
@@ -463,14 +473,15 @@ function createGrass(scene, radius) {
     const source = data[i]
     const normal = new THREE.Vector3(...source.normal)
     const rotation = surfaceQuaternion(normal).multiply(yaw.setFromAxisAngle(localUp, source.yaw))
-    const patch = { normal, rotation, width: source.width, height: source.height, regrowsAt: null, duration: 20000 }
+    const meadow = Math.pow(Math.max(0, normal.y), 8)
+    const patch = { normal, rotation, width: source.width, height: source.height * (1 - meadow * .42), regrowsAt: null, duration: 20000 }
     patches.push(patch)
     dummy.position.copy(normal).multiplyScalar(radius - .012)
     dummy.quaternion.copy(rotation)
     dummy.scale.set(patch.width, patch.height, patch.width)
     dummy.updateMatrix()
     mesh.setMatrixAt(i, dummy.matrix)
-    color.setHSL(source.color[0], source.color[1] + .1, source.color[2] + .08)
+    color.setHSL(source.color[0] + .018, source.color[1] + .04, source.color[2] + .1)
     mesh.setColorAt(i, color)
   }
   mesh.computeBoundingSphere()
@@ -545,21 +556,21 @@ function buildWorld() {
   }
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.02
+  renderer.toneMappingExposure = 1
   renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFShadowMap
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#d4eff0')
   scene.fog = new THREE.FogExp2('#d4eff0', .004)
   const camera = new THREE.PerspectiveCamera(46, 1, .1, 100)
-  scene.add(new THREE.HemisphereLight('#dcf4ff', '#5b713c', 2))
-  const sunlight = new THREE.DirectionalLight('#ffe6bd', 2.7)
+  scene.add(new THREE.HemisphereLight('#e5f6ff', '#5b713c', 1.6))
+  const sunlight = new THREE.DirectionalLight('#ffeac5', 2.35)
   sunlight.castShadow = true
   sunlight.shadow.mapSize.set(2048, 2048)
   Object.assign(sunlight.shadow.camera, { left: -8, right: 8, top: 8, bottom: -8, near: .1, far: 40 })
   sunlight.shadow.normalBias = .035
   scene.add(sunlight, sunlight.target)
-  const rimLight = new THREE.DirectionalLight('#c8eafa', 1.1)
+  const rimLight = new THREE.DirectionalLight('#c8eafa', 1.3)
   scene.add(rimLight, rimLight.target)
   const radius = PLANET_RADIUS
   scene.add(createPlanet(radius))
@@ -726,10 +737,10 @@ function buildWorld() {
     const narrow = window.innerWidth < 680
     const distance = THREE.MathUtils.lerp(narrow ? 18 : 16, 4.5, smoothZoom)
     cameraTarget.copy(cow.position).addScaledVector(normal, THREE.MathUtils.lerp(4.1, 2.4, smoothZoom))
-      .addScaledVector(cameraForward, -distance).addScaledVector(right, distance * .4)
+      .addScaledVector(cameraForward, -distance).addScaledVector(right, distance * (narrow ? .08 : .22))
     focusTarget.copy(cow.position).multiplyScalar(THREE.MathUtils.lerp(.18, .92, smoothZoom))
-    focusTarget.addScaledVector(normal, .8 * smoothZoom)
-    if (!narrow) focusTarget.addScaledVector(right, .45 * (1 - smoothZoom))
+    focusTarget.addScaledVector(normal, 1.3 * smoothZoom + .2)
+    if (!narrow) focusTarget.addScaledVector(right, .25 * (1 - smoothZoom))
     if (narrow) focusTarget.addScaledVector(normal, 1.6 * (1 - smoothZoom))
     camera.position.lerp(cameraTarget, snap ? 1 : ease)
     camera.up.lerp(normal, snap ? 1 : ease).normalize()

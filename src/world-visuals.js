@@ -9,7 +9,18 @@ export function createWorldVisuals(scene, { radius, reduceMotion = false }) {
   const sky = new THREE.Mesh(new THREE.SphereGeometry(75, 32, 16), new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false,
     vertexShader: 'varying vec3 vPosition; void main(){vPosition=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-    fragmentShader: 'varying vec3 vPosition; void main(){float h=normalize(vPosition).y; vec3 color=mix(vec3(.96,.92,.77),vec3(.58,.82,.88),smoothstep(-.6,.85,h));gl_FragColor=vec4(color,1.);}',
+    fragmentShader: `varying vec3 vPosition;
+      void main(){
+        vec3 ray=normalize(vPosition);
+        float h=ray.y;
+        vec3 color=mix(vec3(.97,.93,.79),vec3(.57,.81,.89),smoothstep(-.6,.85,h));
+        float sun=max(dot(ray,normalize(vec3(-.53,.7,.47))),0.);
+        float halo=pow(sun,18.);
+        float disk=smoothstep(.992,.996,sun);
+        color=mix(color,vec3(1.,.9,.69),halo*.35);
+        color=mix(color,vec3(1.,.99,.88),disk*.8);
+        gl_FragColor=vec4(color,1.);
+      }`,
   }))
   sky.renderOrder = -10
   group.add(sky)

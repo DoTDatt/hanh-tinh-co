@@ -1,4 +1,5 @@
-:root{font-family:'Segoe UI',system-ui,sans-serif;color:#294733;background:#d4eff0;font-synthesis:none;--muted:#647761;--green:#56883e;--panel:#fafbefed;--border:#d7e2c7;--shadow:0 12px 36px #34563518}
+@font-face{font-family:Nunito;src:url('./assets/Nunito-Variable.ttf') format('truetype');font-style:normal;font-weight:200 1000;font-display:swap}
+:root{font-family:Nunito,'Segoe UI',system-ui,sans-serif;color:#294733;background:#d4eff0;font-synthesis:none;--muted:#526b55;--green:#4d813c;--panel:#fffdf4f0;--border:#ccdcb9;--shadow:0 14px 38px #244a3226}
 *{box-sizing:border-box}body{margin:0;overflow:hidden;min-width:320px}button,input,select{font:inherit}button{cursor:pointer}button,a{-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #86a95d;outline-offset:3px}[hidden]{display:none!important}button:disabled{opacity:.5;cursor:default}::selection{background:#daeaaa}
 button{border:1px solid var(--border);border-radius:12px;padding:10px 14px;background:#eef3df;color:#3e6235;font-size:14px;font-weight:600}button:not(:disabled):hover{background:#dfeccc}input,select{min-width:0;border:1px solid #c4d4b5;border-radius:10px;padding:10px 12px;background:#fffef5;color:#294733}kbd{display:inline-block;padding:3px 6px;border:1px solid #cbd8be;border-radius:6px;background:#f1f5e8;font-family:inherit;font-size:12px;color:#587248}
 #world{position:fixed;inset:0;width:100%;height:100%;display:block}.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 48%,#b3cbae20);z-index:1}
@@ -33,5 +34,48 @@ button{border:1px solid var(--border);border-radius:12px;padding:10px 14px;backg
 .is-observing .grazing-card,.is-observing .quick-actions,.is-observing .quick-upgrades,.is-observing .upgrade-shortcut,.is-observing .combat-notice,.is-observing .level-toast,.is-observing .reward-notice{display:none!important}
 @media(max-width:680px){.watch-notice{left:14px;top:auto;bottom:14px;width:290px;padding:8px 10px}.watch-controls select{font-size:13px}.watch-footer{font-size:11px}}
 .account-panel,.room-link-panel,#account-top-panel{padding:16px;border:1px solid var(--border);border-radius:14px;background:#eef3e2;margin-bottom:15px}.account-panel h2{margin:0 0 5px}.account-panel p{margin:8px 0}.account-actions,.room-join{display:flex;flex-wrap:wrap;gap:8px}.room-join input{flex:1;min-width:120px}.account-actions button{font-size:14px}.account-actions #account-sign-in{background:#dfecc7}.account-panel #account-save-status{color:#517940;font-size:13px}.account-panel #account-status{font-weight:700;overflow-wrap:anywhere}.room-link-panel label{display:block;font-weight:700;margin-bottom:7px}.room-link-panel .upgrade-note{margin-bottom:0}#account-top-panel summary{cursor:pointer}#account-top-panel .leaderboard-list{margin-bottom:4px}
+
+/* Chữ tròn, rõ dấu tiếng Việt và đủ tương phản khi chơi trên nền 3D. */
+body{font-weight:550;line-height:1.45}
+button{font-weight:800;box-shadow:0 2px 0 #73945c20}
+button:not(:disabled){transition:background-color .15s ease,transform .15s ease,box-shadow .15s ease}
+button:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 4px 10px #34563520}
+button:not(:disabled):active{transform:translateY(1px)}
+.brand,.round-hud,.team-score,.grazing-card,.quick-actions,.quick-upgrades,.combat-notice{box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+.brand{font-size:16px;font-weight:900;letter-spacing:.035em}
+.brand-icon{color:#73a84e}
+.round-hud{padding:10px 20px}
+.round-hud span{font-size:15px;font-weight:900;letter-spacing:.02em}
+#phase-clock{font-size:31px;font-weight:900;color:#3c6d34}
+.team-score{font-size:15px;font-weight:900}
+.my-team{font-size:15px;font-weight:900}
+.cow-status,.bite-reward,.quick-upgrade-hint{font-size:13px;color:var(--muted)}
+.health-heading,.stamina-heading,.level-heading{font-size:14px;font-weight:900}
+.level-heading b{font-weight:900}
+#xp-text{font-size:13px;font-weight:700}
+.quick-upgrade-toggle{font-size:15px;font-weight:900}
+.quick-skill strong{font-size:14px;font-weight:850}
+.quick-skill small{font-size:12px}
+.emote-hint{font-size:12px;color:var(--muted)}
+.game-menu{font-size:17px;line-height:1.5}
+.menu-heading h1{font-size:30px;font-weight:900}
+.menu-tabs button{font-size:16px}
+.menu-content h2{font-size:20px;font-weight:900}
+.menu-footer,.upgrade-note,.level-bonuses,.save-status,.room-status{font-size:14px;color:var(--muted)}
+.help-keys dd,.help-rules li,.room-roster li{font-size:16px}
+.reward-notice h2,.round-result h2{font-weight:900}
+.vignette{background:radial-gradient(ellipse at 50% 45%,transparent 50%,#4269501c 100%)}
+@media(max-width:680px){
+  .brand{font-size:12px}
+  .round-hud span{font-size:13px}
+  #phase-clock{font-size:26px}
+  .team-score{font-size:13px}
+  .my-team,.health-heading,.stamina-heading,.level-heading{font-size:13px}
+  .cow-status,#xp-text,.quick-skill small{font-size:12px}
+  .quick-skill strong{font-size:12px}
+  .quick-upgrade-toggle{font-size:13px}
+  .menu-heading h1{font-size:25px}
+  .menu-tabs button{font-size:14px}
+}
 @media(max-width:480px){.room-join input{flex-basis:100%}.account-actions button{flex:1}}
 .room-link-panel[hidden], #copy-room[hidden], #account-top-panel[hidden] { display: none !important; }
